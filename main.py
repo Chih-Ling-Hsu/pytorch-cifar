@@ -63,12 +63,13 @@ if device == 'cuda':
 
 # Load checkpoint.
 print('==> Resuming from checkpoint..')
-checkpoint = torch.load('/tmp/work/checkpoint/ckpt.t7')
+checkpoint = torch.load('/tmp/work/checkpoint/ckpt.cifar10.t7')
 net.load_state_dict(checkpoint['net'])
+#start_epoch = checkpoint['epoch']
     
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
-scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250], gamma=0.1)
+scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 250], gamma=0.1)
 
 # Training
 def train(epoch):
@@ -90,8 +91,8 @@ def train(epoch):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-            % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        progress_bar(batch_idx, len(trainloader), 'Acc: %.3f%%'
+            % (100.*correct/total))
 
 def test(epoch):
     global best_acc
@@ -110,8 +111,8 @@ def test(epoch):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+            progress_bar(batch_idx, len(testloader), 'Acc: %.3f%%'
+                % (100.*correct/total))
 
     # Save checkpoint.
     acc = 100.*correct/total
@@ -124,11 +125,12 @@ def test(epoch):
         }
         if not os.path.isdir('/tmp/work/checkpoint'):
             os.mkdir('/tmp/work/checkpoint')
-        torch.save(state, '/tmp/work/checkpoint/ckpt.t7')
+        torch.save(state, '/tmp/work/checkpoint/ckpt.cinic10.0.t7')
         best_acc = acc
 
 
 for epoch in range(start_epoch, start_epoch+350):
     scheduler.step()
     train(epoch)
-    test(epoch)
+    if epoch % 10 == 0:
+        test(epoch)
